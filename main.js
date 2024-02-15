@@ -16,38 +16,78 @@
 
 let userInput = document.getElementById("user-input");
 let inputButton = document.getElementById("input-button");
+let tabs = document.querySelectorAll(".task-tabs div");
+let underLine = document.getElementById("under-line");
 let taskList = []
+let mode = "all"
+let filterList = []
 
 inputButton.addEventListener("click",addTask)
+userInput.addEventListener("keypress", function(event) {
+    if (event.key === "Enter") { 
+        addTask();
+    }
+});
+
+tabs.forEach((menu) =>
+    menu.addEventListener("click", (e) => underLineIndicator(e))
+);
+
+function underLineIndicator(e){
+    underLine.style.left = e.currentTarget.offsetLeft + "px";
+    underLine.style.width = e.currentTarget.offsetWidth + "px";
+    underLine.style.top = 
+        (e.currentTarget.offsetTop + e.currentTarget.offsetHeight) - 2 + "px"; // 언더라인 위치 조정
+}
+
+
+
+console.log(tabs)
+
+for(let i=1;i<tabs.length;i++){
+    tabs[i].addEventListener("click",function(event){filter(event)})
+}
 
 function addTask (){
-    let task = {
-        id : makeId(),
-        taskContent : userInput.value,
-        isDone : false
+    if(userInput.value!=""){
+        let task = {
+            id : makeId(),
+            taskContent : userInput.value,
+            isDone : false
+        }
+        taskList.push(task);
+        console.log(taskList);
+        userInput.value="";
+        render();
     }
-    taskList.push(task);
-    console.log(taskList);
-    render();
 }
 
 function render(){
+    let list = [];
+    if(mode ==="all"){
+        list = taskList;
+    }else if(mode ==="ongoing"){
+        list = filterList;
+    }else if(mode ==="done"){
+        list = filterList;
+    }
+
     let resultHTML = '';
-    for(let i = 0; i<taskList.length;i++){
-        if(taskList[i].isDone == true){
+    for(let i = 0; i<list.length;i++){
+        if(list[i].isDone == true){
             resultHTML += `<div class="task">
-        <div class="checked">${taskList[i].taskContent}</div>
+        <div class="checked">${list[i].taskContent}</div>
         <div>                
-            <img src="/images/return.png" alt="Check" onclick="toggleDone('${taskList[i].id}')" class="task-icon">
-            <img src="/images/delete.png" alt="Delete" onclick="deleteTask('${taskList[i].id}')" style="cursor: pointer;" class="task-icon">
+            <img src="/images/return.png" alt="Check" onclick="toggleDone('${list[i].id}')" class="task-icon">
+            <img src="/images/delete.png" alt="Delete" onclick="deleteTask('${list[i].id}')" style="cursor: pointer;" class="task-icon">
             </div>
             </div>`
         }else{
             resultHTML += `<div class="task">
-            <div>${taskList[i].taskContent}</div>
+            <div>${list[i].taskContent}</div>
             <div>                
-            <img src="/images/check.png" alt="Check" onclick="toggleDone('${taskList[i].id}')"  class="task-icon">
-            <img src="/images/delete.png" alt="Delete" onclick="deleteTask('${taskList[i].id}')" style="cursor: pointer;" class="task-icon">
+            <img src="/images/check.png" alt="Check" onclick="toggleDone('${list[i].id}')"  class="task-icon">
+            <img src="/images/delete.png" alt="Delete" onclick="deleteTask('${list[i].id}')" style="cursor: pointer;" class="task-icon">
         </div>
     </div>`
         }
@@ -67,8 +107,33 @@ function deleteTask(id){
             break;
         }
     }
+    if(mode !== "all"){
+        filterList = filterList.filter(task => task.id !== id);
+    }
     render();
-    console.log(taskList)
+    console.log(taskList, "에서 삭제됨.")
+}
+
+function filter(event){
+    mode = event.target.id
+    filterList = []
+    if(mode === "all"){
+        render()
+    }else if(mode === "ongoing"){
+        for(let i=0;i<taskList.length;i++){
+            if(taskList[i].isDone == false){
+                filterList.push(taskList[i])
+            }
+        }
+        render()
+    }else if(mode === "done"){
+        for(let i=0;i<taskList.length;i++){
+            if(taskList[i].isDone == true){
+                filterList.push(taskList[i])
+            }
+        }
+        render()
+    }
 }
 
 function toggleDone(id){
